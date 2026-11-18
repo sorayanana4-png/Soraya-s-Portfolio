@@ -1,0 +1,6 @@
+{
+  "name": "Beyond the CV — Soraya's World",
+  "description": "More than a profile. A whole universe. Interactive personal portfolio, business development showcase, travel documentary, cinema lounge, music journal, library, kitchen, and lifestyle magazine for Soraya Boua.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
