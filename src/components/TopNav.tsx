@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { UNIVERSE_CARDS } from '../data/sorayaData';
 import { useUniverse } from '../context/UniverseContext';
+import { getPathForUniverse } from '../seo/seoConfig';
 import { UniverseId } from '../types/universe';
 
 export function TopNav() {
@@ -17,6 +18,11 @@ export function TopNav() {
     setMobileMenuOpen(false);
   };
 
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, id: UniverseId) => {
+    e.preventDefault();
+    navigate(id);
+  };
+
   return (
     <>
       <header
@@ -28,19 +34,19 @@ export function TopNav() {
       >
         <div className="max-w-[1440px] mx-auto px-5 md:px-10 h-16 flex items-center justify-between gap-8">
           {/* Zone 1 : Titre éditorial */}
-          <button
-            type="button"
-            onClick={() => navigate('home')}
+          <a
+            href={getPathForUniverse('home')}
+            onClick={(e) => handleLinkClick(e, 'home')}
             className="font-editorial text-2xl font-semibold tracking-tight whitespace-nowrap shrink-0 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600 rounded-sm"
           >
             Soraya Boua
-          </button>
+          </a>
 
           {/* Zone 2 : 5 liens de navigation clairs */}
-          <nav className="hidden lg:flex items-center gap-7 text-sm font-medium">
-            <button
-              type="button"
-              onClick={() => navigate('home')}
+          <nav aria-label="Navigation principale" className="hidden lg:flex items-center gap-7 text-sm font-medium">
+            <a
+              href={getPathForUniverse('home')}
+              onClick={(e) => handleLinkClick(e, 'home')}
               className={`whitespace-nowrap shrink-0 cursor-pointer transition-colors pb-0.5 border-b ${
                 activeUniverse === 'home'
                   ? isDarkUniverse
@@ -50,10 +56,10 @@ export function TopNav() {
               }`}
             >
               Accueil
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('career')}
+            </a>
+            <a
+              href={getPathForUniverse('career')}
+              onClick={(e) => handleLinkClick(e, 'career')}
               className={`whitespace-nowrap shrink-0 cursor-pointer transition-colors pb-0.5 border-b ${
                 activeUniverse === 'career'
                   ? isDarkUniverse
@@ -63,10 +69,10 @@ export function TopNav() {
               }`}
             >
               Parcours
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('projects')}
+            </a>
+            <a
+              href={getPathForUniverse('projects')}
+              onClick={(e) => handleLinkClick(e, 'projects')}
               className={`whitespace-nowrap shrink-0 cursor-pointer transition-colors pb-0.5 border-b ${
                 activeUniverse === 'projects'
                   ? isDarkUniverse
@@ -76,7 +82,7 @@ export function TopNav() {
               }`}
             >
               Projets &amp; Freelance
-            </button>
+            </a>
             <button
               type="button"
               onClick={() => setAtlasOpen((v) => !v)}
@@ -102,17 +108,17 @@ export function TopNav() {
 
           {/* Zone 3 : Action principale + menu mobile */}
           <div className="flex items-center gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={() => navigate('contact')}
-              className={`px-4 py-2 text-xs font-semibold tracking-wide rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer min-h-[40px] ${
+            <a
+              href={getPathForUniverse('contact')}
+              onClick={(e) => handleLinkClick(e, 'contact')}
+              className={`px-4 py-2 text-xs font-semibold tracking-wide rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer min-h-[40px] inline-flex items-center ${
                 isDarkUniverse
                   ? 'bg-amber-400 text-stone-950 hover:bg-amber-300'
                   : 'bg-stone-900 text-[#FAF8F5] hover:bg-stone-800'
               }`}
             >
               Me contacter
-            </button>
+            </a>
             <button
               type="button"
               aria-label="Ouvrir le menu de navigation"
@@ -136,11 +142,11 @@ export function TopNav() {
                 {UNIVERSE_CARDS.map((u) => {
                   const active = activeUniverse === u.id;
                   return (
-                    <button
+                    <a
                       key={u.id}
-                      type="button"
-                      onClick={() => navigate(u.id)}
-                      className={`text-left p-4 rounded-xl border transition-all cursor-pointer ${
+                      href={getPathForUniverse(u.id)}
+                      onClick={(e) => handleLinkClick(e, u.id)}
+                      className={`text-left p-4 rounded-xl border transition-all cursor-pointer block ${
                         active
                           ? isDarkUniverse
                             ? 'bg-white/10 border-amber-400/60'
@@ -164,7 +170,7 @@ export function TopNav() {
                       </div>
                       <p className="font-editorial text-lg font-semibold leading-snug">{u.title}</p>
                       <p className="text-xs opacity-70 line-clamp-1 mt-0.5">{u.subtitle}</p>
-                    </button>
+                    </a>
                   );
                 })}
               </div>
@@ -180,13 +186,13 @@ export function TopNav() {
             }`}
           >
             <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => navigate('home')}
-                className="p-3 text-left text-sm font-medium rounded-lg border border-current/15 min-h-[44px]"
+              <a
+                href={getPathForUniverse('home')}
+                onClick={(e) => handleLinkClick(e, 'home')}
+                className="p-3 text-left text-sm font-medium rounded-lg border border-current/15 min-h-[44px] flex items-center"
               >
                 Accueil
-              </button>
+              </a>
               <button
                 type="button"
                 onClick={() => {
@@ -201,10 +207,10 @@ export function TopNav() {
             <div className="space-y-1.5">
               <p className="text-xs opacity-60 px-1">Explorer les univers</p>
               {UNIVERSE_CARDS.map((u) => (
-                <button
+                <a
                   key={u.id}
-                  type="button"
-                  onClick={() => navigate(u.id)}
+                  href={getPathForUniverse(u.id)}
+                  onClick={(e) => handleLinkClick(e, u.id)}
                   className={`w-full flex items-center justify-between p-3 rounded-lg text-left text-sm min-h-[44px] ${
                     activeUniverse === u.id ? 'bg-current/10 font-semibold' : 'hover:bg-current/5'
                   }`}
@@ -213,7 +219,7 @@ export function TopNav() {
                     <span className="font-tabular opacity-60 mr-2">{u.number}</span>
                     {u.title}
                   </span>
-                </button>
+                </a>
               ))}
             </div>
           </div>
@@ -222,7 +228,8 @@ export function TopNav() {
 
       {/* Bandeau contextuel d'exploration d'univers */}
       {activeUniverse !== 'home' && (
-        <div
+        <nav
+          aria-label="Exploration des univers"
           className={`border-b text-xs transition-colors ${
             isDarkUniverse
               ? 'bg-[#0E0E14] border-white/10 text-stone-300'
@@ -230,19 +237,19 @@ export function TopNav() {
           }`}
         >
           <div className="max-w-[1440px] mx-auto px-5 md:px-10 py-2.5 flex items-center gap-4 overflow-x-auto editorial-scroll">
-            <button
-              type="button"
-              onClick={() => navigate('home')}
+            <a
+              href={getPathForUniverse('home')}
+              onClick={(e) => handleLinkClick(e, 'home')}
               className="whitespace-nowrap shrink-0 font-medium hover:underline cursor-pointer"
             >
               Retour à l’accueil
-            </button>
+            </a>
             <span aria-hidden="true" className="opacity-30">/</span>
             {UNIVERSE_CARDS.map((u) => (
-              <button
+              <a
                 key={u.id}
-                type="button"
-                onClick={() => navigate(u.id)}
+                href={getPathForUniverse(u.id)}
+                onClick={(e) => handleLinkClick(e, u.id)}
                 className={`whitespace-nowrap shrink-0 cursor-pointer transition-colors px-2.5 py-1 rounded-md ${
                   activeUniverse === u.id
                     ? isDarkUniverse
@@ -253,10 +260,10 @@ export function TopNav() {
               >
                 <span className="font-tabular mr-1.5 opacity-70">{u.number}</span>
                 {u.title}
-              </button>
+              </a>
             ))}
           </div>
-        </div>
+        </nav>
       )}
     </>
   );

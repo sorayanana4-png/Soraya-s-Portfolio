@@ -1,7 +1,14 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { INITIAL_CLOUDINARY_URLS } from '../data/mediaConfig';
 import { MOVIES_CATALOG } from '../data/movies';
 import { INITIAL_CMS_DATA } from '../data/sorayaData';
+import {
+  buildRouteJsonLd,
+  getPathForUniverse,
+  getRouteConfigByUniverse,
+  getUniverseFromPath,
+  normalizePathname,
+} from '../seo/seoConfig';
 import {
   BookEntry,
   ConcertMemory,
@@ -91,8 +98,9 @@ function mapBookStatus(status: unknown): BookEntry['status'] {
 }
 
 function hydrateCMSState(): SorayaCMSData {
+  if (typeof window === 'undefined') return INITIAL_CMS_DATA;
   try {
-    const savedFr = localStorage.getItem(STORAGE_KEY);
+    const savedFr = window.localStorage.getItem(STORAGE_KEY);
     if (savedFr) {
       const parsed = JSON.parse(savedFr) as Partial<SorayaCMSData>;
       const existingMoviesById = new Map<string, Partial<MovieItem>>();
@@ -138,7 +146,7 @@ function hydrateCMSState(): SorayaCMSData {
     }
 
     // Migration douce depuis d'anciennes versions anglaises : on récupère uniquement les créations/URLs utilisateur
-    const legacyRaw = LEGACY_KEYS.map((k) => localStorage.getItem(k)).find(Boolean);
+    const legacyRaw = LEGACY_KEYS.map((k) => window.localStorage.getItem(k)).find(Boolean);
     if (legacyRaw) {
       const parsed = JSON.parse(legacyRaw) as Partial<SorayaCMSData>;
       const migratedCloudinary: Record<string, string> = { ...INITIAL_CLOUDINARY_URLS };
@@ -210,27 +218,107 @@ function hydrateCMSState(): SorayaCMSData {
   return INITIAL_CMS_DATA;
 }
 
-export function UniverseProvider({ children }: { children: React.ReactNode }) {
-  const [activeUniverse, setActiveUniverseState] = useState<UniverseId>('home');
+function upsertMetaTag(attr: 'name' | 'property', key: string, content: string) {
+  let el = document.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', content);
+}
+
+export function UniverseProvider({
+  children,
+  initialUniverse,
+}: {
+  children: React.ReactNode;
+  initialUniverse?: UniverseId;
+}) {
+  const [activeUniverse, setActiveUniverseState] = useState<UniverseId>(() => {
+    if (initialUniverse) return initialUniverse;
+    if (typeof window !== 'undefined') {
+      return getUniverseFromPath(window.location.pathname);
+    }
+    return 'home';
+  });
   const [isCMSOpen, setIsCMSOpen] = useState(false);
   const [cmsInitialTab, setCmsInitialTab] = useState('cloudinary');
   const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
   const [isCVModalOpen, setIsCVModalOpen] = useState(false);
   const [generatedTracks, setGeneratedTracks] = useState<GeneratedSoundtrack[]>([]);
 
-  const [cmsData, setCmsData] = useState<SorayaCMSData>(hydrateCMSState);
+  // Initialisation déterministe pour correspondre strictement au HTML prérendu lors de l'hydratation
+  const [cmsData, setCmsData] = useState<SorayaCMSData>(INITIAL_CMS_DATA);
+  const hasHydratedStorageRef = useRef(false);
 
   useEffect(() => {
+    const hydrated = hydrateCMSState();
+    hasHydratedStorageRef.current = true;
+    setCmsData(hydrated);
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydratedStorageRef.current) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cmsData));
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cmsData));
     } catch {
       // Ignorer les erreurs de quota stockage
     }
   }, [cmsData]);
 
+  // Synchronisation avec les boutons Précédent/Suivant du navigateur
+  useEffect(() => {
+    const onPopState = () => {
+      const next = getUniverseFromPath(window.location.pathname);
+      setActiveUniverseState(next);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  // Synchronisation dynamique des balises SEO, canonique et JSON-LD lors de la navigation client
+  useEffect(() => {
+    const origin = window.location.origin;
+    const route = getRouteConfigByUniverse(activeUniverse);
+    const canonicalUrl = route.path === '/' ? `${origin}/` : `${origin}${route.path}`;
+
+    document.title = route.title;
+    upsertMetaTag('name', 'description', route.description);
+    upsertMetaTag('name', 'keywords', route.keywords.join(', '));
+    upsertMetaTag('property', 'og:title', route.title);
+    upsertMetaTag('property', 'og:description', route.description);
+    upsertMetaTag('property', 'og:url', canonicalUrl);
+    upsertMetaTag('name', 'twitter:title', route.title);
+    upsertMetaTag('name', 'twitter:description', route.description);
+
+    let canonicalLink = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link');
+      canonicalLink.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.setAttribute('href', canonicalUrl);
+
+    let ldScript = document.getElementById('soraya-jsonld') as HTMLScriptElement | null;
+    if (!ldScript) {
+      ldScript = document.createElement('script');
+      ldScript.id = 'soraya-jsonld';
+      ldScript.type = 'application/ld+json';
+      document.head.appendChild(ldScript);
+    }
+    ldScript.textContent = JSON.stringify(buildRouteJsonLd(activeUniverse, origin));
+  }, [activeUniverse]);
+
   const setActiveUniverse = (id: UniverseId) => {
     setActiveUniverseState(id);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window !== 'undefined') {
+      const targetPath = getPathForUniverse(id);
+      if (normalizePathname(window.location.pathname) !== targetPath) {
+        window.history.pushState({ universe: id }, '', targetPath);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const openCMSAt = (tab: string) => {

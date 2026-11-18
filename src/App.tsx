@@ -16,6 +16,9 @@ import { KitchenView } from './views/KitchenView';
 import { LifestyleView } from './views/LifestyleView';
 import { ContactView } from './views/ContactView';
 
+import { getPathForUniverse } from './seo/seoConfig';
+import { UniverseId } from './types/universe';
+
 function UniverseStage() {
   const { activeUniverse, setActiveUniverse, openCMSAt } = useUniverse();
   const isDarkUniverse = activeUniverse === 'cinema' || activeUniverse === 'music';
@@ -44,6 +47,11 @@ function UniverseStage() {
       default:
         return <HomeView />;
     }
+  };
+
+  const handleNavLink = (e: React.MouseEvent<HTMLAnchorElement>, id: UniverseId) => {
+    e.preventDefault();
+    setActiveUniverse(id);
   };
 
   return (
@@ -79,20 +87,27 @@ function UniverseStage() {
             <p className="mt-0.5">Plus qu’un profil. Tout un univers. · Soraya Boua</p>
           </div>
           <div className="flex flex-wrap items-center gap-5">
-            <button
-              type="button"
-              onClick={() => setActiveUniverse('home')}
+            <a
+              href={getPathForUniverse('home')}
+              onClick={(e) => handleNavLink(e, 'home')}
               className="hover:underline cursor-pointer"
             >
               Accueil
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveUniverse('career')}
+            </a>
+            <a
+              href={getPathForUniverse('career')}
+              onClick={(e) => handleNavLink(e, 'career')}
               className="hover:underline cursor-pointer"
             >
               Parcours
-            </button>
+            </a>
+            <a
+              href={getPathForUniverse('projects')}
+              onClick={(e) => handleNavLink(e, 'projects')}
+              className="hover:underline cursor-pointer"
+            >
+              Projets
+            </a>
             <button
               type="button"
               onClick={() => openCMSAt('media')}
@@ -100,13 +115,13 @@ function UniverseStage() {
             >
               Studio de contenu
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveUniverse('contact')}
+            <a
+              href={getPathForUniverse('contact')}
+              onClick={(e) => handleNavLink(e, 'contact')}
               className="hover:underline cursor-pointer font-semibold"
             >
               sorayalopespro@gmail.com
-            </button>
+            </a>
           </div>
         </div>
       </footer>
@@ -118,9 +133,9 @@ function UniverseStage() {
   );
 }
 
-export function App() {
+export function App({ initialUniverse }: { initialUniverse?: UniverseId }) {
   return (
-    <UniverseProvider>
+    <UniverseProvider initialUniverse={initialUniverse}>
       <UniverseStage />
     </UniverseProvider>
   );

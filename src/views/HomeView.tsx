@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, Box, Download, ExternalLink, Mail } from 'lucide-react';
 import { useUniverse } from '../context/UniverseContext';
 import { UNIVERSE_CARDS, WHAT_I_BRING } from '../data/sorayaData';
+import { getPathForUniverse, SORAYA_GEO_FAQ } from '../seo/seoConfig';
 import { ThreeUniverseScene } from '../components/ThreeUniverseScene';
 
 export function HomeView() {
@@ -95,13 +96,16 @@ export function HomeView() {
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
                 <span aria-hidden="true" className="text-stone-300">/</span>
-                <button
-                  type="button"
-                  onClick={() => setActiveUniverse('contact')}
+                <a
+                  href={getPathForUniverse('contact')}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveUniverse('contact');
+                  }}
                   className="hover:text-stone-950 underline underline-offset-4 cursor-pointer"
                 >
                   Contact recruteurs &amp; partenaires
-                </button>
+                </a>
               </div>
             </div>
           </motion.div>
@@ -117,7 +121,7 @@ export function HomeView() {
               {!portraitError && portraitUrl ? (
                 <img
                   src={portraitUrl}
-                  alt="Portrait éditorial de Soraya Boua"
+                  alt="Portrait éditorial de Soraya Boua — Business Development & Marketing Digital"
                   referrerPolicy="no-referrer"
                   onError={() => setPortraitError(true)}
                   className="w-full h-full object-cover object-top"
@@ -211,14 +215,17 @@ export function HomeView() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
             {UNIVERSE_CARDS.map((u, i) => (
-              <motion.button
+              <motion.a
                 key={u.id}
-                type="button"
+                href={getPathForUniverse(u.id)}
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ duration: 0.4, delay: i * 0.04 }}
-                onClick={() => setActiveUniverse(u.id)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveUniverse(u.id);
+                }}
                 className={`group relative text-left rounded-2xl overflow-hidden min-h-[280px] flex flex-col justify-between p-6 transition-transform duration-300 hover:-translate-y-1 cursor-pointer ${u.bgClass} ${u.textClass}`}
               >
                 {u.coverImage && (
@@ -263,7 +270,7 @@ export function HomeView() {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
-              </motion.button>
+              </motion.a>
             ))}
           </div>
         </div>
@@ -280,14 +287,17 @@ export function HomeView() {
             <p className="text-sm text-stone-600 leading-relaxed">
               Sept qualités clés forgées sur le terrain entre développement commercial intensif, marketing de marque, entrepreneuriat et hospitalité internationale en direct.
             </p>
-            <button
-              type="button"
-              onClick={() => setActiveUniverse('career')}
+            <a
+              href={getPathForUniverse('career')}
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveUniverse('career');
+              }}
               className="inline-flex items-center gap-2 text-sm font-semibold text-stone-900 underline underline-offset-4 hover:text-amber-800 cursor-pointer pt-2"
             >
               Découvrir le parcours &amp; la carte des compétences
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </a>
           </div>
 
           <div className="lg:col-span-7 space-y-3">
@@ -343,6 +353,45 @@ export function HomeView() {
             <p>
               En prospection commerciale comme en accueil international, cette même attention devient une véritable force d’écoute active, d’improvisation fluide et d’adaptation immédiate à chaque interlocuteur.
             </p>
+          </div>
+        </div>
+
+        {/* Questions fréquentes · Repères structurés SEO & GEO */}
+        <div className="pt-4 border-t border-stone-200/80 space-y-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="space-y-2 max-w-2xl">
+              <p className="text-xs font-medium text-stone-500">Repères rapides · Recruteurs &amp; Partenaires</p>
+              <h2 className="font-editorial text-3xl md:text-4xl font-semibold text-stone-950">
+                Questions fréquentes sur le profil de Soraya Boua
+              </h2>
+            </div>
+            <a
+              href={getPathForUniverse('contact')}
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveUniverse('contact');
+              }}
+              className="text-xs font-semibold text-stone-900 underline underline-offset-4 hover:text-amber-800 whitespace-nowrap"
+            >
+              Échanger directement →
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {SORAYA_GEO_FAQ.map((item, idx) => (
+              <article
+                key={item.question}
+                className="rounded-2xl bg-white border border-stone-200/90 p-6 space-y-2.5"
+              >
+                <span className="font-tabular text-xs text-amber-800 font-medium">
+                  0{idx + 1}
+                </span>
+                <h3 className="font-editorial text-xl font-semibold text-stone-950 leading-snug">
+                  {item.question}
+                </h3>
+                <p className="text-sm text-stone-600 leading-relaxed">{item.answer}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
